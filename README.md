@@ -121,3 +121,64 @@ Map
 
 *array, set, map은 Symbol.iterator 메서드를 가지고 있다.
 
+## 사용자 정의 이터러블
+```js
+const iterable = {
+	[Symbol.iterator]() {
+		let i = 3;
+		return {
+			next() {
+				// value와 done을 가지고 있는 객체를 리턴
+				return i === 0 ? { done: true } : { value: i--, done: false};
+			},
+			[Symbol.iterator]() {return this;}	
+		}
+	}
+};
+let iterator = iterable[Symbol.iterator]();
+console.log(iterator.next());
+for (const a of iterable) console.log(a);
+
+const arr2 = [1,2,3];
+let iter2 = arr2[Symbol.iterator]();
+iter2.next();// iter2도 Symbol.iterator를 가지고 있음(순회 가능)
+for (const a of iter2) console.log(a);
+```
+## 제너레이터
+이터레이터를 리턴하는 함수.
+```js
+function *gen() {
+	// yield 오른쪽의 표현식을 평가하고 결과 반환
+	yield 1;
+	yield 2;
+	yield 3;
+	return 100; //리턴값을 만들 수 있다.
+}
+let iter = gen(); // 이터레이터를 반환
+console.log(iter[Symbol.iterator]() == iter); // Symbol.iterator를 실행하면 자기자신을 반환
+console.log(iter.next()); // next 실행시 {value:1, done: false}
+console.log(iter.next()); // {value:2, done: false}
+console.log(iter.next()); // {value:3, done: false}
+console.log(iter.next()); // {value:100, done: true} 
+
+for (const a of gen()) console.log(a);
+```
+
+## map
+모든 이터러블 객체에 사용가능 (유사배열 포함)
+```js
+const map = (f, iter) => {
+	let res= [];
+	for (const a of iter) {
+		res.push(f(a));
+	}
+	return res;
+}
+```
+
+## Map,  Object 차이점
+### Map
+ [Symbol.iterator]속성을 가지고 있어 for of 문, foreach문으로 순회가능.(순서보장)
+### Object
+[Symbol.iterator]속성이 없으며 for in문으로 순회가능(순서 보장되지 않음)
+
