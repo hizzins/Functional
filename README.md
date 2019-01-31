@@ -181,4 +181,44 @@ const map = (f, iter) => {
  [Symbol.iterator]속성을 가지고 있어 for of 문, foreach문으로 순회가능.(순서보장)
 ### Object
 [Symbol.iterator]속성이 없으며 for in문으로 순회가능(순서 보장되지 않음)
+## filter
+```js
+const products = [
+	{name: '반팔티', price: 15000},
+	{name: '긴팔티', price: 20000},
+	{name: '핸드폰케이스', price: 30000},
+	{name: '바지', price: 25000}
+];
+
+const filter = (f, iter) => {
+	let res = [];
+	for (const a of iter) {
+		if (f(a)) res.push(a);
+	}
+	return res;
+}
+```
+## reduce
+```js
+const nums = [1, 2, 3, 4, 5];
+const reduce = (f, acc, iter) => {  
+ // reduce(add, [1,2,3,4,5]로 호출시에도 작동  
+  if (!iter) {  
+  iter= iter[Symbol.iterator]();  
+  acc = iter.next().value;  
+ }  
+ for (const a of iter) {  
+  acc = f(acc, a);  
+ }  
+ return acc;  
+}
+const add = (a, b) => a + b;
+console.log(reduce(add, 0, nums));
+console.log(
+reduce(
+	(tota_price, product) => total_price + product.price, 
+	0, 
+	products)
+);
+```
 
