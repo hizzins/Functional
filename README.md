@@ -204,9 +204,10 @@ const nums = [1, 2, 3, 4, 5];
 const reduce = (f, acc, iter) => {  
  // reduce(add, [1,2,3,4,5]로 호출시에도 작동  
   if (!iter) {  
-  iter= iter[Symbol.iterator]();  
-  acc = iter.next().value;  
+  iter= acc[Symbol.iterator]();  
+  acc = iter.next().value; // acc[0]
  }  
+ // iter의 두번재 next부터 실행
  for (const a of iter) {  
   acc = f(acc, a);  
  }  
@@ -221,4 +222,68 @@ reduce(
 	products)
 );
 ```
+
+## map filter reduce 중첩
+```js
+const products = [
+	{name: '반팔티', price: 15000},
+	{name: '긴팔티', price: 20000},
+	{name: '핸드폰케이스', price: 30000},
+	{name: '바지', price: 25000}
+];
+const add = (a, b) => a + b;
+console.log(
+	reduce( 
+		add, 
+		map(p=> p.price, filter(p => p.price < 20000, products)
+	)
+); // 20000만원보다 작은 값의 상품들을 모두 더한 값
+```
+## go
+```js
+// reduce함수에서 나온 결과값을 얻을 수 있다.
+const go = (...args) => reduce((a, f) => f(a), args);
+console.log(go(
+	0,
+	a => a +1,
+	a => a +10,
+	a => a + 100,
+));
+```
+go함수가 호출된 reduce함수에서의 동작을 살펴보면
+```js
+const reduce = (f, acc, iter) => {  
+ // f 는 (a, f) => f(a)
+ // acc 는 [0, a => a +1, a => a +10, a => a + 100]
+ // iter 는 undefined
+ if (!iter) {  
+  iter= acc[Symbol.iterator]();
+  acc = iter.next().value;  // 0
+ }  
+ for (const a of iter) {  
+ // 1. f(0, a => a +1) 는 0 => 0 + 1
+ // 2. f(1, a => a +10) 는 1 => 1 + 10
+ // 3. f(11, a => a +100) 는 11 => 11 + 100
+  acc = f(acc, a); // 곧 a(acc)를 실행하는 함수.
+ }  
+ return acc; // 111
+}
+```
+## pipe
+```js
+const pipe = (f, ...fs) => (...as) => go(f(...as), ...fs);
+// f는 (a, b) => a + b
+// fs는 [a => a + 10, a => a + 100]
+// as는 [0,1]
+// f(...as)의 값은 1
+// 결국엔 go(1, a => a + 10, a => a + 100)를 호출하는셈
+// 111
+const f = pipe(  
+  (a, b) => a + b,  
+  a => a + 10,  
+  a => a + 100  
+);
+console.log('pipe', f(0,1));
+```
+
 
