@@ -286,4 +286,78 @@ const f = pipe(
 console.log('pipe', f(0,1));
 ```
 
+## curry
+함수를 값으로 받아서 원하는 시점에 평가.
+```js
+// 인자가 2개이상인 경우 실행
+const products = [  
+  {name: '반팔티', price: 15000},  
+  {name: '긴팔티', price: 20000},  
+  {name: '핸드폰케이스', price: 30000},  
+  {name: '바지', price: 10000}  
+];
+
+const curry = f => (a, ..._) => _.length ? f(a, ..._) : (..._) => f(a, ..._);
+const mult = utils.curry((a, b) => a * b);  
+console.log('curry', mult(1)(2)); // 2
+
+console.log(  
+  'curry go',  
+   utils.go(  
+	  products,  
+	  products => utils.filter(p => p.price < 20000, products),  
+	  products => utils.map(p => p.price, products),  
+	  prices => utils.reduce(add, prices)  
+	)
+);
+
+console.log(  
+  'curry go',  
+   utils.go(  
+     products,  
+     utils.filter(p => p.price < 20000),  
+     utils.map(p => p.price),  
+     utils.reduce(add)  
+   )  
+);
+```
+
+go함수가 호출된 reduce함수에서의 동작을 살펴보면
+```js
+const reduce = (f, acc, iter) => {  
+ // f 는 (a, f) => f(a)
+ // acc 는 
+ // [products, utils.filter(p => p.price < 20000), 
+ // utils.map(p => p.price), utils.reduce(add)]
+ // iter 는 undefined
+ if (!iter) {  
+  iter= acc[Symbol.iterator]();
+  acc = iter.next().value;  // products
+ }  
+ for (const a of iter) {  
+ // 1. utils.filter(p => p.price < 20000) 의 
+ //    결과값은 [{name: '반팔티', price: 15000}, {name: '바지', price: 10000}]
+ // 2. utils.map(p => p.price) 의 결과값은 [15000, 10000]
+ // 3. utils.reduce(add)] 의 결과값은 25000
+  acc = f(acc, a); // 곧 a(acc)를 실행하는 함수.
+  // 1. 
+ }  
+ return acc; // 25000
+}
+```
+``` utils.filter(p => p.price < 20000)``` 의 동작을 살펴보면
+```js
+const curry = f => (a, ..._) => _.length ? f(a, ..._) : (..._) => f(a, ..._);
+// 1. 
+const filter = curry((f, iter) => {  
+ let res = [];  
+ for (const a of iter) {  
+  if (f(a)) res.push(a);  
+ }  
+ return res;  
+});
+
+console.log(utils.filter(p => p.price < 20000));
+```
+
 
